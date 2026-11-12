@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.ObsMobile" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#8AB4F8</item>
+    </style>
+</resources>
