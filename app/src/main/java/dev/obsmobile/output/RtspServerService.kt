@@ -15,20 +15,28 @@ import dev.obsmobile.capture.ScreenCaptureService
 class RtspServerService : Service() {
 
     private var server: RtspServer? = null
+    private var control: ControlServer? = null
+    private var bluetooth: BluetoothCommandServer? = null
 
     override fun onCreate() {
         super.onCreate()
         instance = this
         startNotification()
         server = RtspServer(PORT).also { it.start() }
-        ScreenCaptureService.instance?.let {
-            // Sinks are registered from MainActivity when capture starts.
-        }
+
+        // Wi-Fi control API + Bluetooth command channel
+        ApiStore.init(this)
+        control = ControlServer(CONTROL_PORT).also { it.start() }
+        bluetooth = BluetoothCommandServer().withContext(this).also { it.start() }
     }
 
     override fun onDestroy() {
         server?.stop()
         server = null
+        control?.stop()
+        control = null
+        bluetooth?.stop()
+        bluetooth = null
         instance = null
         super.onDestroy()
     }
@@ -55,6 +63,7 @@ class RtspServerService : Service() {
 
     companion object {
         const val PORT = 8554
+        const val CONTROL_PORT = 8081
         private const val CHANNEL_ID = "stream"
 
         @Volatile var instance: RtspServerService? = null

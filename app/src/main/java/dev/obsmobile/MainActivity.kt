@@ -24,7 +24,13 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var statusText: TextView
     private lateinit var urlText: TextView
+    private lateinit var apiText: TextView
     private var streaming = false
+
+    companion object {
+        @Volatile var context: android.content.Context? = null
+            private set
+    }
 
     private val stateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -41,6 +47,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         statusText = findViewById(R.id.status)
         urlText = findViewById(R.id.url)
+        apiText = findViewById(R.id.api)
+        context = applicationContext
+
+        // Bluetooth control needs BLUETOOTH_CONNECT at runtime (Android 12+)
+        if (android.os.Build.VERSION.SDK_INT >= 31 &&
+            checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(android.Manifest.permission.BLUETOOTH_CONNECT), 1)
+        }
 
         findViewById<Button>(R.id.btnCapture).setOnClickListener {
             if (streaming) {
@@ -77,6 +93,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnStop).visibility =
             if (streaming) View.VISIBLE else View.GONE
         urlText.text = "rtsp://${localIp()}:${RtspServerService.PORT}/live"
+        apiText.text = "api: http://${localIp()}:${RtspServerService.CONTROL_PORT}/api/status\nbt: pair & open SPP \"ObsMobile\""
     }
 
     private fun localIp(): String =
